@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "984590794939",
+    "project_id": "deliveryapp-c1a5f",
+    "storage_bucket": "deliveryapp-c1a5f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:984590794939:android:ddcb8bec7e898ead0d299e",
+        "android_client_info": {
+          "package_name": "com.example.flutter_project"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_KTvVwW8K-Xa2R96nhsYIjIHF8UAmZ4M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
