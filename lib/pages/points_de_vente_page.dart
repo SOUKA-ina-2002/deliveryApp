@@ -48,10 +48,10 @@ class PointsDeVentePage extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.push(
+         /* Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => AddPointPage()),
-          );
+          );*/
         },
         child: Icon(Icons.add),
         backgroundColor: Colors.blue.shade300,

@@ -1,96 +1,88 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:flutter_project/pages/auth-page.dart';
-import 'package:flutter_project/pages/points_de_vente_page.dart';
 import 'package:latlong2/latlong.dart';
+import '../helpers/DataBaseHelper.dart';
 
-import 'add-visit.dart';
-import 'manage-visits-page.dart';
+class MapPage extends StatefulWidget {
+  @override
+  _MapPageState createState() => _MapPageState();
+}
 
-class MapPage extends StatelessWidget {
+class _MapPageState extends State<MapPage> {
+  List<Marker> markers = [];
+  final DatabaseHelper dbHelper = DatabaseHelper();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSalesPoints();
+  }
+
+  Future<void> _loadSalesPoints() async {
+    final points = await dbHelper.getSalesPoints();
+    setState(() {
+      markers = points.map((point) {
+        final coords = point['gps_coordinates'].split(', ');
+        final lat = double.parse(coords[0]);
+        final lng = double.parse(coords[1]);
+
+        return Marker(
+          point: LatLng(lat, lng),
+          child: Icon(
+            Icons.location_on,
+            color: Colors.red,
+            size: 30,
+          ),
+        );
+      }).toList();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Bienvenue"),
+        title: Text("Carte"),
         backgroundColor: Colors.blue.shade300,
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.blue.shade300,
-              ),
-              child: Text(
-                'Menu',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
-              ),
-            ),
-            ListTile(
-              leading: Icon(Icons.location_on),
-              title: Text('Points de Vente'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => PointsDeVentePage()),
-                );
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.calendar_today),
-              title: Text('Planification de Tournée'),
-              onTap: () {
-                // Naviguer vers la page Planification (future page)
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.assignment),
-              title: Text('Gérer les Visites'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => ManageVisitsPage()), // Crée cette page
-                );
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.exit_to_app),
-              title: Text('Déconnexion'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AuthPage()),
-                );              },
-            ),
-          ],
-        ),
       ),
       body: FlutterMap(
         options: MapOptions(
-          initialCenter: LatLng(33.547665816250685, -7.650248141871139), // Coordonnées initiales
+          initialCenter: LatLng(33.547665816250685, -7.650248141871139),
           initialZoom: 13.0,
+          onTap: (tapPosition, point) async {
+            if (point != null) {
+              String coordinates = "${point.latitude}, ${point.longitude}";
+              final result = await Navigator.pushNamed(
+                context,
+                '/addPoint',
+                arguments: coordinates,
+              );
+              if (result == true) {
+                _loadSalesPoints(); // Recharge la carte si un point a été ajouté
+              }
+            }
+          },
         ),
         children: [
           TileLayer(
-            urlTemplate:
-            "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
             subdomains: ['a', 'b', 'c'],
+          ),
+          MarkerLayer(
+            markers: markers,
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          final result = await Navigator.pushNamed(
             context,
-            MaterialPageRoute(
-                builder: (context) => AddVisitPage()), // Page pour ajouter une visite
+            '/addPoint',
+            arguments: "33.547665816250685, -7.650248141871139",
           );
+          if (result == true) {
+            _loadSalesPoints(); // Recharge la carte si un point a été ajouté
+          }
         },
         child: Icon(Icons.add),
         backgroundColor: Colors.blue.shade300,

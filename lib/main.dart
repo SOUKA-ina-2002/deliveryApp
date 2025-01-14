@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import '/pages/auth-page.dart';
+import '/pages/add_point_page.dart'; // Assurez-vous d'importer votre AddPointPage
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,7 +21,13 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: AuthPage(),
+      initialRoute: '/', // Route initiale (AuthPage)
+      routes: {
+        '/': (context) => AuthPage(), // Page d'authentification
+        '/addPoint': (context) => AddPointPage(
+          initialCoordinates: ModalRoute.of(context)!.settings.arguments as String,
+        ), // Page pour ajouter un point
+      },
     );
   }
 }
