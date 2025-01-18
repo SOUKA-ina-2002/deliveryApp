@@ -361,18 +361,20 @@ class DatabaseHelper {
   Future<List<Map<String, dynamic>>> getVisitsByTournee(int tourneeId) async {
     final db = await database;
     return await db.rawQuery('''
-    SELECT 
-      v.*, 
-      sp.name AS point_name, 
-      p.nom AS product_name, 
-      v.observations AS observation
-    FROM visites v
-    LEFT JOIN sales_points sp ON v.point_vente_id = sp.id
-    LEFT JOIN produits p ON v.produit_id = p.id
-    WHERE v.tournee_id = ? AND v.produit_id IS NOT NULL
-    ORDER BY v.ordre ASC
+  SELECT 
+    v.*, 
+    sp.name AS point_name, 
+    p.nom AS product_name, 
+    v.observations AS visit_observation, -- Correct ici
+    v.time AS visit_time -- Correct ici
+  FROM visites v
+  LEFT JOIN sales_points sp ON v.point_vente_id = sp.id
+  LEFT JOIN produits p ON v.produit_id = p.id
+  WHERE v.tournee_id = ? AND v.produit_id IS NOT NULL
+  ORDER BY v.ordre ASC
   ''', [tourneeId]);
   }
+
 
 
 

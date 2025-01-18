@@ -18,6 +18,7 @@ The goal is to create a Flutter application that allows the delivery person to:
 1. Manage their points of sale (add, modify, delete).
 2. Plan their delivery route.
 3. Record sales and notes after each visit.
+4. Visualize itineraries and navigate through planned routes.
 
 ---
 
@@ -43,7 +44,7 @@ The delivery person can manage their points of sale:
 ### 4. Geolocation and Itinerary
 - Display all points of sale on an interactive map.
 - Show the route between the delivery person’s current GPS position and the selected points of sale in the itinerary.
-- The itinerary should be downloaded via the OpenRouteService API and saved in the database for offline viewing.
+- The itinerary is downloaded via the OpenRouteService API and saved in the database for offline viewing.
 
 ### 5. Sales Tracking
 - After each visit, the delivery person records the following data:
@@ -57,15 +58,24 @@ The delivery person can manage their points of sale:
 
 - **Flutter**: Application development.
 - **SQLite**: Local data storage.
-- **Leaflet.js**: Interactive map for geolocation and navigation.
+- **Flutter Map**: Interactive map for geolocation and navigation.
+- **OpenRouteService API**: For route planning and navigation.
 
 ---
+
+## UseCase Diagram
+
+Below is the UseCase diagram that represents the main functions of the system:
+
+![UseCase Diagram](images/UseCase Diagram0.png)
+
 
 ## Class Diagram
 
 Below is the class diagram that represents the structure and relationships of the system:
 
 ![Class Diagram](images/ClassDiagram2.png)
+
 
 ### Explanation of the Diagram
 
@@ -83,24 +93,30 @@ Below is the class diagram that represents the structure and relationships of th
 
 3. **RoutePlan**:
     - Represents the daily delivery plan.
-    - Attributes: `Date`.
-    - Method:
+    - Attributes: `Date` and the sequence of visits.
+    - Methods:
         - `SetOrder()`: Define the sequence of visits.
     - Relationship: Organizes multiple `SalesPoint` entities.
 
 4. **Itinerary**:
     - Represents the route information.
-    - Attributes: `Polyline` and `Directions` for mapping and navigation.
+    - Attributes: `Polyline`, `Distance`, `EstimatedTime`, and `Geometry`.
 
 5. **Visit**:
     - Tracks details of each visit to a sales point.
-    - Attributes: `Quantity` (sold), `Observation` (notes), and `Hour` (time of visit).
+    - Attributes: `Quantity` (sold), `Observation` (notes), `Hour` (time of visit), and `SalesPoint`.
     - Relationship: Links `DeliveryPerson` and `SalesPoint` through recorded visits.
 
 6. **Product**:
     - Represents the items being sold.
-    - Attributes: `Name` and `Description`.
+    - Attributes: `Name`, `Description`, and `Price`.
     - Relationship: Used within `Visit` for sales recording.
+
+---
+
+## Use Case Diagram
+
+The use case diagram illustrating the functionality of the application is available [here](images/UseCaseDiagram.png).
 
 ---
 
@@ -110,34 +126,3 @@ Below is the class diagram that represents the structure and relationships of th
    ```bash
    git clone https://github.com/SOUKA-ina-2002/deliveryApp.git
    cd DeliveryApp
-   ```
-
-2. **Install Dependencies**:
-   Ensure you have Flutter installed. Then run:
-   ```bash
-   flutter pub get
-   ```
-
-3. **Run the Application**:
-   ```bash
-   flutter run
-   ```
-
-4. **Database Setup**:
-   SQLite is used for local storage. The database schema is auto-generated on first launch.
-
----
-
-## Contributions
-
-We welcome contributions! Please follow the standard guidelines:
-1. Fork the repository.
-2. Create a feature branch.
-3. Commit your changes.
-4. Open a pull request.
-
----
-
-
-
-
