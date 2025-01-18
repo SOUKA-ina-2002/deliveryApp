@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../helpers/AuthService.dart';
+
+import '../../helpers/AuthService.dart';
+import '../../helpers/DataBaseHelper.dart';
+
 
 class SignUpPage extends StatefulWidget {
   @override
@@ -9,11 +12,14 @@ class SignUpPage extends StatefulWidget {
 
 class _SignUpPageState extends State<SignUpPage> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _nomController = TextEditingController();
+  final TextEditingController _prenomController = TextEditingController();
+  final TextEditingController _telController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passController = TextEditingController();
   final TextEditingController _confirmpassController = TextEditingController();
   final AuthService _auth = AuthService();
+  final DatabaseHelper _dbHelper = DatabaseHelper();
 
   @override
   Widget build(BuildContext context) {
@@ -58,21 +64,62 @@ class _SignUpPageState extends State<SignUpPage> {
                       ),
                     ),
                     SizedBox(height: 40),
-                    // Username field
+                    // Nom field
                     TextFormField(
-                      controller: _usernameController,
+                      controller: _nomController,
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: Colors.white,
                         prefixIcon: Icon(Icons.person),
-                        labelText: "Nom d'utilisateur",
+                        labelText: "Nom",
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12.0),
                         ),
                       ),
                       validator: (value) {
                         if (value!.isEmpty) {
-                          return 'Veuillez entrer votre nom d\'utilisateur';
+                          return 'Veuillez entrer votre nom';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 20),
+                    // Prénom field
+                    TextFormField(
+                      controller: _prenomController,
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.white,
+                        prefixIcon: Icon(Icons.person),
+                        labelText: "Prénom",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return 'Veuillez entrer votre prénom';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 20),
+                    // Téléphone field
+                    TextFormField(
+                      controller: _telController,
+                      keyboardType: TextInputType.phone,
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.white,
+                        prefixIcon: Icon(Icons.phone),
+                        labelText: "Téléphone",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return 'Veuillez entrer votre numéro de téléphone';
                         }
                         return null;
                       },
@@ -152,24 +199,41 @@ class _SignUpPageState extends State<SignUpPage> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      onPressed: () async {
-                        if (_formKey.currentState!.validate()) {
-                          _formKey.currentState?.save();
-                          // Sign up user with Firebase
-                          User? usr = await _auth.signUpWithEmailandPass(
-                              _emailController.text, _passController.text);
-                          if (usr != null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text("Inscription réussie"),
-                                backgroundColor: Colors.green,
-                              ),
+                        onPressed: () async {
+                          if (_formKey.currentState!.validate()) {
+                            _formKey.currentState?.save();
+
+                            // Sign up user with Firebase
+                            User? usr = await _auth.signUpWithEmailandPass(
+                              _emailController.text,
+                              _passController.text,
                             );
-                            Navigator.pushReplacementNamed(context, '/login');
+
+                            if (usr != null) {
+                              // Ajouter ou vérifier l'utilisateur dans SQLite
+                              String result = await _dbHelper.insertOrUpdateLivreur(
+                                nom: _nomController.text,
+                                prenom: _prenomController.text,
+                                tel: _telController.text,
+                                firebaseUserId: usr.uid,
+                                mail: _emailController.text,
+                              );
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(result),
+                                  backgroundColor: result.contains("succès") ? Colors.green : Colors.red,
+                                ),
+                              );
+
+                              // Si l'inscription est réussie, rediriger vers la page de connexion
+                              if (result == "Compte créé avec succès.") {
+                                Navigator.pushReplacementNamed(context, '/login');
+                              }
+                            }
                           }
-                        }
-                      },
-                      child: Text("S'inscrire"),
+                        },
+                        child: Text("S'inscrire"),
                     ),
                     SizedBox(height: 20),
                     // Already have an account
@@ -203,9 +267,11 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   void dispose() {
-    _passController.dispose();
+    _nomController.dispose();
+    _prenomController.dispose();
+    _telController.dispose();
     _emailController.dispose();
-    _usernameController.dispose();
+    _passController.dispose();
     _confirmpassController.dispose();
     super.dispose();
   }

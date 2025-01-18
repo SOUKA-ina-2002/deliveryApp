@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import '../helpers/DataBaseHelper.dart';
+import '../../helpers/DataBaseHelper.dart';
 
 class AddPointPage extends StatefulWidget {
   final String initialCoordinates;
+  final String firebaseUserId; // Ajoutez le firebaseUserId pour identifier le livreur
 
-  AddPointPage({Key? key, required this.initialCoordinates}) : super(key: key);
+  AddPointPage({Key? key, required this.initialCoordinates, required this.firebaseUserId})
+      : super(key: key);
 
   @override
   _AddPointPageState createState() => _AddPointPageState();
@@ -19,25 +21,6 @@ class _AddPointPageState extends State<AddPointPage> {
   final TextEditingController contactNameController = TextEditingController();
   final TextEditingController contactPhoneController = TextEditingController();
   final TextEditingController storageCapacityController = TextEditingController();
-
-  late Future<List<Map<String, dynamic>>> _salesPoints;
-
-  @override
-  void initState() {
-    super.initState();
-    _salesPoints = _fetchSalesPoints();
-  }
-
-  Future<List<Map<String, dynamic>>> _fetchSalesPoints() async {
-    final dbHelper = DatabaseHelper();
-    return await dbHelper.getSalesPoints();
-  }
-
-  void _refreshSalesPoints() {
-    setState(() {
-      _salesPoints = _fetchSalesPoints();
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -109,16 +92,27 @@ class _AddPointPageState extends State<AddPointPage> {
               ElevatedButton(
                 onPressed: () async {
                   if (_formKey.currentState?.validate() ?? false) {
+                    // Récupérer l'id du livreur connecté via la méthode existante
+                    final dbHelper = DatabaseHelper();
+                    final livreur = await dbHelper.getLivreurByFirebaseUserId(widget.firebaseUserId);
+
+                    if (livreur == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Erreur : Livreur introuvable')),
+                      );
+                      return;
+                    }
+
+                    final livreurId = livreur['id']; // Extraire l'id du livreur
+
                     // Récupérer les valeurs des champs
                     final name = nameController.text;
                     final address = addressController.text;
                     final contactName = contactNameController.text;
                     final contactPhone = contactPhoneController.text;
-                    final storageCapacity =
-                        int.tryParse(storageCapacityController.text) ?? 0;
+                    final storageCapacity = int.tryParse(storageCapacityController.text) ?? 0;
 
                     // Insérer dans la base de données
-                    final dbHelper = DatabaseHelper();
                     await dbHelper.insertSalesPoint(
                       name: name,
                       address: address,
@@ -126,14 +120,13 @@ class _AddPointPageState extends State<AddPointPage> {
                       contactPhone: contactPhone,
                       storageCapacity: storageCapacity,
                       gpsCoordinates: widget.initialCoordinates,
+                      livreurId: livreurId, // Inclure l'id du livreur
                     );
 
-                    // Confirmation et rafraîchissement
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Point de Vente ajouté avec succès')),
                     );
 
-                    // Retourner un indicateur à la carte
                     Navigator.pop(context, true); // Indique que la carte doit se rafraîchir
                   }
                 },
@@ -149,33 +142,6 @@ class _AddPointPageState extends State<AddPointPage> {
                   "Enregistrer",
                   style: TextStyle(fontSize: 18),
                 ),
-              ),
-              SizedBox(height: 30),
-              FutureBuilder<List<Map<String, dynamic>>>(
-                future: _salesPoints,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text("Erreur de chargement"));
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Center(child: Text("Aucun point de vente disponible"));
-                  }
-                  final salesPoints = snapshot.data!;
-                  return ListView.builder(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: salesPoints.length,
-                    itemBuilder: (context, index) {
-                      final point = salesPoints[index];
-                      return ListTile(
-                        leading: Icon(Icons.location_on, color: Colors.blue.shade300),
-                        title: Text(point['name']),
-                        subtitle: Text(point['address']),
-                      );
-                    },
-                  );
-                },
               ),
             ],
           ),

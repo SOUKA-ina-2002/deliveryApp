@@ -1,6 +1,7 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
+
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   factory DatabaseHelper() => _instance;
@@ -17,29 +18,156 @@ class DatabaseHelper {
 
   Future<Database> _initDatabase() async {
     final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'sales_points.db');
+    final path = join(dbPath, 'sales_management.db');
     return await openDatabase(
       path,
       version: 1,
       onCreate: (db, version) async {
+        // Table Livreurs
         await db.execute('''
-          CREATE TABLE sales_points (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            address TEXT,
-            contact_name TEXT,
-            contact_phone TEXT,
-            storage_capacity INTEGER,
-            gps_coordinates TEXT
-          )
-        ''');
+        CREATE TABLE livreurs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          nom TEXT NOT NULL,
+          prenom TEXT NOT NULL,
+          tel TEXT NOT NULL,
+          mail TEXT NOT NULL UNIQUE,
+          firebase_user_id TEXT NOT NULL UNIQUE
+        )
+      ''');
+
+        // Table Produits
+        await db.execute('''
+        CREATE TABLE produits (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          nom TEXT NOT NULL,
+          description TEXT,
+          prix_unitaire REAL NOT NULL,
+          livreur_id INTEGER NOT NULL,
+          FOREIGN KEY (livreur_id) REFERENCES livreurs(id) ON DELETE CASCADE
+        )
+      ''');
+
+        // Table Points de Vente
+        await db.execute('''
+        CREATE TABLE sales_points (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          address TEXT NOT NULL,
+          contact_name TEXT,
+          contact_phone TEXT,
+          storage_capacity INTEGER,
+          gps_coordinates TEXT,
+          livreur_id INTEGER NOT NULL,
+          FOREIGN KEY (livreur_id) REFERENCES livreurs(id) ON DELETE CASCADE
+        )
+      ''');
+
+        // Table Tournées
+        await db.execute('''
+        CREATE TABLE tournees (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          date TEXT NOT NULL,
+          nom TEXT NOT NULL,
+          livreur_id INTEGER NOT NULL,
+          FOREIGN KEY (livreur_id) REFERENCES livreurs(id) ON DELETE CASCADE
+      );
+      ''');
+
+        // Table Visites (Association entre tournées, points de vente, et produits)
+        await db.execute('''
+        CREATE TABLE visites (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          tournee_id INTEGER NOT NULL,
+          point_vente_id INTEGER NOT NULL,
+          produit_id INTEGER, -- Peut être NULL si aucun produit n’est associé
+          quantite_vendue INTEGER,
+          observations TEXT,
+          ordre INTEGER NOT NULL, -- Ordre de la visite
+          FOREIGN KEY (tournee_id) REFERENCES tournees(id) ON DELETE CASCADE,
+          FOREIGN KEY (point_vente_id) REFERENCES sales_points(id) ON DELETE CASCADE,
+          FOREIGN KEY (produit_id) REFERENCES produits(id) ON DELETE CASCADE
+      );
+      ''');
+
+        // Table Itinéraires
+        await db.execute('''
+        CREATE TABLE itineraires (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          tournee_id INTEGER NOT NULL,
+          point_depart TEXT NOT NULL,
+          point_arrivee TEXT NOT NULL,
+          distance REAL NOT NULL,
+          temps_estime TEXT NOT NULL,
+          FOREIGN KEY (tournee_id) REFERENCES tournees(id) ON DELETE CASCADE
+        )
+      ''');
       },
     );
   }
 
-  Future<List<Map<String, dynamic>>> getSalesPoints() async {
+  //CRUD des tables
+
+  //table livreurs:
+  Future<String> insertOrUpdateLivreur({
+    required String nom,
+    required String prenom,
+    required String tel,
+    required String firebaseUserId,
+    required String mail,
+  }) async {
     final db = await database;
-    return await db.query('sales_points');
+
+    // Vérifiez si un livreur existe déjà avec ce firebaseUserId
+    final existingLivreur = await db.query(
+      'livreurs',
+      where: 'firebase_user_id = ?',
+      whereArgs: [firebaseUserId],
+    );
+
+    if (existingLivreur.isNotEmpty) {
+      // Si le livreur existe, retourner un message d'erreur
+      return "Un compte associé à cet utilisateur existe déjà.";
+    }
+
+    // Si le livreur n'existe pas, insérer un nouvel enregistrement
+    await db.insert('livreurs', {
+      'nom': nom,
+      'prenom': prenom,
+      'tel': tel,
+      'mail': mail,
+      'firebase_user_id': firebaseUserId,
+    });
+
+    return "Compte créé avec succès.";
+  }
+
+
+  Future<Map<String, dynamic>?> getLivreurByFirebaseUserId(String firebaseUserId) async {
+    final db = await database;
+
+    final result = await db.query(
+      'livreurs',
+      where: 'firebase_user_id = ?',
+      whereArgs: [firebaseUserId],
+      limit: 1,
+    );
+
+    if (result.isNotEmpty) {
+      return result.first;
+    }
+    return null;
+  }
+
+
+  //table SalePoints:
+
+  Future<List<Map<String, dynamic>>> getSalesPoints(int livreurId) async {
+    final db = await database;
+    return await db.query(
+      'sales_points',
+      where: 'livreur_id = ?',
+      whereArgs: [livreurId],
+    );
   }
 
 
@@ -50,6 +178,7 @@ class DatabaseHelper {
     required String contactPhone,
     required int storageCapacity,
     required String gpsCoordinates,
+    required int livreurId, // Ajout de l'ID du livreur
   }) async {
     final db = await database;
     return await db.insert('sales_points', {
@@ -59,12 +188,14 @@ class DatabaseHelper {
       'contact_phone': contactPhone,
       'storage_capacity': storageCapacity,
       'gps_coordinates': gpsCoordinates,
+      'livreur_id': livreurId, // Associer le point de vente au livreur
     });
   }
 
 
   Future<int> updateSalesPoint({
     required int id,
+    required int livreurId,
     required String name,
     required String address,
     required String contactName,
@@ -83,13 +214,118 @@ class DatabaseHelper {
         'storage_capacity': storageCapacity,
         'gps_coordinates': gpsCoordinates,
       },
-      where: 'id = ?',
-      whereArgs: [id],
+      where: 'id = ? AND livreur_id = ?', // Vérification par id et livreur_id
+      whereArgs: [id, livreurId],
     );
   }
 
-  Future<int> deleteSalesPoint(int id) async {
+
+  Future<int> deleteSalesPoint(int id, int livreurId) async {
     final db = await database;
-    return await db.delete('sales_points', where: 'id = ?', whereArgs: [id]);
+    return await db.delete(
+      'sales_points',
+      where: 'id = ? AND livreur_id = ?',
+      whereArgs: [id, livreurId],
+    );
   }
+
+
+  //table Produit
+
+  Future<List<Map<String, dynamic>>> getProducts(int livreurId) async {
+    final db = await database;
+    return await db.query(
+      'produits',
+      where: 'livreur_id = ?',
+      whereArgs: [livreurId],
+    );
+  }
+
+  Future<int> insertProduct({
+    required String nom,
+    required String description,
+    required double prixUnitaire,
+    required int livreurId,
+  }) async {
+    final db = await database;
+    return await db.insert('produits', {
+      'nom': nom,
+      'description': description,
+      'prix_unitaire': prixUnitaire,
+      'livreur_id': livreurId,
+    });
+  }
+
+  Future<int> updateProduct(Map<String, dynamic> product) async {
+    final db = await database;
+    return await db.update(
+      'produits',
+      product,
+      where: 'id = ?',
+      whereArgs: [product['id']],
+    );
+  }
+
+  Future<int> deleteProduct(int productId) async {
+    final db = await database;
+    return await db.delete(
+      'produits',
+      where: 'id = ?',
+      whereArgs: [productId],
+    );
+  }
+
+//table tournee
+  Future<int> insertTournee({
+    required String date,
+    required String nom, // Ajout du champ nom
+    required int livreurId,
+  }) async {
+    final db = await database;
+
+    return await db.insert('tournees', {
+      'date': date,
+      'nom': nom, // Ajout du nom
+      'livreur_id': livreurId,
+    });
+  }
+
+
+  Future<List<Map<String, dynamic>>> getTourneesByLivreur(int livreurId) async {
+    final db = await database;
+    return await db.query(
+      'tournees',
+      where: 'livreur_id = ?',
+      whereArgs: [livreurId],
+      orderBy: 'date DESC',
+    );
+  }
+
+  Future<void> deleteTournee(int tourneeId) async {
+    final db = await database;
+    await db.delete('tournees', where: 'id = ?', whereArgs: [tourneeId]);
+    await db.delete('visites', where: 'tournee_id = ?', whereArgs: [tourneeId]);
+  }
+
+
+  //table visit
+  Future<int> insertVisit({
+    required int tourneeId,
+    required int pointId,
+    required int productId,
+    required int quantity,
+    required int order,
+  }) async {
+    final db = await database;
+
+    return await db.insert('visites', {
+      'tournee_id' :tourneeId ,
+      'point_vente_id': pointId,
+      'produit_id': productId,
+      'quantite_vendue': quantity,
+      'ordre': order,
+    });
+  }
+
+
 }

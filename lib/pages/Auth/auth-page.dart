@@ -1,8 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '../helpers/authservice.dart';
-import '../pages/signupPage.dart';
-import '../pages/map-page.dart';
+import '../../helpers/DataBaseHelper.dart';
+import '../../helpers/authservice.dart';
+import 'signupPage.dart';
+import '../map-page.dart';
 
 class AuthPage extends StatefulWidget {
   @override
@@ -37,21 +38,30 @@ class _AuthPageState extends State<AuthPage> {
                     radius: 50,
                     backgroundColor: Colors.white,
                     child: Icon(
-                      Icons.login,
+                      Icons.delivery_dining,
                       size: 50,
                       color: Colors.blue.shade800,
                     ),
                   ),
                   SizedBox(height: 20),
-                  Text(
-                    'Connexion',
+                Text(
+                    "Trajecto",
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                ),
+            ),
+              Text(
+                  "Simplifiez vos livraisons",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.normal,
+                  color: Colors.white70,
+              ),
+          ),
                   SizedBox(height: 40),
                   TextField(
                     controller: _emailController,
@@ -93,13 +103,30 @@ class _AuthPageState extends State<AuthPage> {
                       try {
                         String email = _emailController.text;
                         String pass = _passController.text;
+
+                        // Authentification avec Firebase
                         User? usr = await _auth.signInWithEmailandPass(email, pass);
+
                         if (usr != null) {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (context) => MapPage()),
-                          );
+                          final firebaseUserId = usr.uid;
+
+                          // Vérifier si l'utilisateur existe dans SQLite
+                          final livreur = await DatabaseHelper().getLivreurByFirebaseUserId(firebaseUserId);
+
+                          if (livreur != null) {
+                            final livreurId = livreur['id']; // Récupérer l'id du livreur depuis SQLite
+
+                            // Si l'utilisateur existe dans SQLite, aller à la carte
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (context) => MapPage(livreurId: livreurId)),
+                            );
+                          } else {
+                            // Si l'utilisateur n'existe pas dans SQLite, aller à une page de mise à jour du profil
+                            //Navigator.pushReplacementNamed(context, '/updateProfile', arguments: firebaseUserId);
+                          }
                         } else {
+                          // Utilisateur Firebase invalide
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text("Email ou mot de passe incorrect"),
@@ -110,11 +137,12 @@ class _AuthPageState extends State<AuthPage> {
                       } on FirebaseAuthException catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(e.message!),
+                            content: Text(e.message ?? "Erreur d'authentification"),
                           ),
                         );
                       }
-                    },
+                    }
+                    ,
                     child: Text('Se connecter'),
                   ),
                   SizedBox(height: 20),
