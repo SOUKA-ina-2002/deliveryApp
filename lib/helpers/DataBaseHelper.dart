@@ -19,7 +19,7 @@ class DatabaseHelper {
   Future<Database> _initDatabase() async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'sales_management.db');
-    return await openDatabase(
+    /*return await openDatabase(
       path,
       version: 1,
       onCreate: (db, version) async {
@@ -81,8 +81,9 @@ class DatabaseHelper {
           point_vente_id INTEGER NOT NULL,
           produit_id INTEGER, -- Peut être NULL si aucun produit n’est associé
           quantite_vendue INTEGER,
-          observations TEXT,
           ordre INTEGER NOT NULL, -- Ordre de la visite
+          observations TEXT,
+          time TEXT,
           FOREIGN KEY (tournee_id) REFERENCES tournees(id) ON DELETE CASCADE,
           FOREIGN KEY (point_vente_id) REFERENCES sales_points(id) ON DELETE CASCADE,
           FOREIGN KEY (produit_id) REFERENCES produits(id) ON DELETE CASCADE
@@ -102,7 +103,20 @@ class DatabaseHelper {
         )
       ''');
       },
+    )*/
+    return await openDatabase(
+      path,
+      version: 2, // Mettez à jour la version
+      onCreate: (db, version) async {
+        // Votre code pour créer les tables
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute('ALTER TABLE visites ADD COLUMN time TEXT');
+        }
+      },
     );
+    ;
   }
 
   //CRUD des tables
@@ -160,6 +174,18 @@ class DatabaseHelper {
 
 
   //table SalePoints:
+
+  Future<List<Map<String, dynamic>>> getSalesPointsByTournee(int tourneeId) async {
+    final db = await database;
+
+    // Exécuter une requête pour récupérer les points de vente associés à une tournée spécifique
+    return await db.rawQuery('''
+    SELECT sp.*
+    FROM sales_points sp
+    INNER JOIN visites v ON sp.id = v.point_vente_id
+    WHERE v.tournee_id = ?
+  ''', [tourneeId]);
+  }
 
   Future<List<Map<String, dynamic>>> getSalesPoints(int livreurId) async {
     final db = await database;
@@ -312,20 +338,42 @@ class DatabaseHelper {
   Future<int> insertVisit({
     required int tourneeId,
     required int pointId,
-    required int productId,
-    required int quantity,
+    int? productId, // Facultatif
+    int? quantity,
     required int order,
+    String? observations,
+    String? time
   }) async {
     final db = await database;
 
     return await db.insert('visites', {
-      'tournee_id' :tourneeId ,
+      'tournee_id': tourneeId,
       'point_vente_id': pointId,
-      'produit_id': productId,
+      'produit_id': productId, // Peut être NULL si non fourni
       'quantite_vendue': quantity,
       'ordre': order,
+      'observations' : observations,
+      'time' : time,
     });
   }
+
+
+  Future<List<Map<String, dynamic>>> getVisitsByTournee(int tourneeId) async {
+    final db = await database;
+    return await db.rawQuery('''
+    SELECT 
+      v.*, 
+      sp.name AS point_name, 
+      p.nom AS product_name, 
+      v.observations AS observation
+    FROM visites v
+    LEFT JOIN sales_points sp ON v.point_vente_id = sp.id
+    LEFT JOIN produits p ON v.produit_id = p.id
+    WHERE v.tournee_id = ? AND v.produit_id IS NOT NULL
+    ORDER BY v.ordre ASC
+  ''', [tourneeId]);
+  }
+
 
 
 }

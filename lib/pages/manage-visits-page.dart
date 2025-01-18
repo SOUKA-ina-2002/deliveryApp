@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project/pages/tournee/TourDetailsPage.dart';
 import '../helpers/DataBaseHelper.dart';
 
 class ManageVisitsPage extends StatefulWidget {
@@ -38,7 +39,7 @@ class _ManageVisitsPageState extends State<ManageVisitsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Gérer les Tournées"),
+        title: Text("Vos tournées"),
         backgroundColor: Colors.blue.shade300,
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
@@ -57,12 +58,15 @@ class _ManageVisitsPageState extends State<ManageVisitsPage> {
             itemCount: tours.length,
             itemBuilder: (context, index) {
               final tour = tours[index];
+              final date = DateTime.parse(tour['date']);
+              final formattedDate = "${date.day}/${date.month}/${date.year}";
+
               return Card(
                 margin: EdgeInsets.all(8.0),
                 child: ListTile(
                   leading: Icon(Icons.assignment, color: Colors.blue.shade800),
-                  title: Text("Tournée du ${tour['date']}"),
-                  subtitle: Text("ID: ${tour['id']}"),
+                  title: Text("${tour['nom']}"),
+                  subtitle: Text("Date: $formattedDate"),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -73,9 +77,18 @@ class _ManageVisitsPageState extends State<ManageVisitsPage> {
                     ],
                   ),
                   onTap: () {
-                    // Afficher les détails de la tournée
-                    print("Afficher détails tournée ${tour['id']}");
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TourDetailsPage(
+                          tourneeId: tour['id'],
+                          tourName: tour['nom'],
+                          livreurId: widget.livreurId,
+                        ),
+                      ),
+                    );
                   },
+
                 ),
               );
             },

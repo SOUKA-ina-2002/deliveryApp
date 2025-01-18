@@ -55,29 +55,12 @@ class _PlanificationTourneePageState extends State<PlanificationTourneePage> {
         final pointId = entry.key;
         final order = entry.value;
 
-        final products = productQuantities[pointId] ?? {};
-        if (products.isEmpty) {
-          await dbHelper.insertVisit(
-            tourneeId: tourneeId,
-            pointId: pointId,
-            productId: 0,
-            quantity: 0,
-            order: order,
-          );
-        } else {
-          for (var productEntry in products.entries) {
-            final productId = productEntry.key;
-            final quantity = productEntry.value;
+        await dbHelper.insertVisit(
+          tourneeId: tourneeId,
+          pointId: pointId,
+          order: order,
+        );
 
-            await dbHelper.insertVisit(
-              tourneeId: tourneeId,
-              pointId: pointId,
-              productId: productId,
-              quantity: quantity,
-              order: order,
-            );
-          }
-        }
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -102,7 +85,7 @@ class _PlanificationTourneePageState extends State<PlanificationTourneePage> {
       }
     });
   }
-
+/*
   Future<void> _showProductSelection(int pointId) async {
     final products = await dbHelper.getProducts(widget.livreurId);
     if (products.isEmpty) {
@@ -120,7 +103,7 @@ class _PlanificationTourneePageState extends State<PlanificationTourneePage> {
 
         return Padding(
           padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom, // Ajuste le padding pour le clavier
+            bottom: MediaQuery.of(context).viewInsets.bottom,
             top: 16.0,
             left: 16.0,
             right: 16.0,
@@ -184,7 +167,7 @@ class _PlanificationTourneePageState extends State<PlanificationTourneePage> {
         );
       },
     );
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {
@@ -263,16 +246,16 @@ class _PlanificationTourneePageState extends State<PlanificationTourneePage> {
                       return Card(
                         margin: EdgeInsets.symmetric(vertical: 8.0),
                         child: ListTile(
-                          leading: Checkbox(
-                            value: selectedPoints.containsKey(pointId),
-                            onChanged: (value) {
-                              _toggleSelection(
-                                  pointId, value == true ? selectedPoints.length + 1 : null);
-                            },
+                          leading: CircleAvatar(
+                            backgroundColor: Colors.blue.shade300,
+                            child: Text(
+                              '${selectedPoints[pointId] ?? '-'}',
+                              style: TextStyle(color: Colors.white),
+                            ),
                           ),
                           title: Text(point['name']),
-                          subtitle: Text(
-                              'Ordre : ${selectedPoints[pointId] ?? '-'}'),
+                          /*subtitle: Text(
+                              'Cliquez pour associer des produits.'),
                           trailing: IconButton(
                             icon: Icon(Icons.add),
                             onPressed: () {
@@ -286,7 +269,11 @@ class _PlanificationTourneePageState extends State<PlanificationTourneePage> {
                                 );
                               }
                             },
-                          ),
+                          ),*/
+                          onTap: () {
+                            _toggleSelection(
+                                pointId, selectedPoints.length + 1);
+                          },
                         ),
                       );
                     },
