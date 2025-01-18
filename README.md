@@ -67,7 +67,7 @@ The delivery person can manage their points of sale:
 
 Below is the UseCase diagram that represents the main functions of the system:
 
-![UseCase Diagram](images/UseCase Diagram0.png)
+![Use Case Diagram](images/UseCaseDiagram0.png)
 
 
 ## Class Diagram
