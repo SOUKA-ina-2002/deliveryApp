@@ -76,6 +76,10 @@ class _TourDetailsPageState extends State<TourDetailsPage> {
               final visit = visits[index];
               return Card(
                 margin: EdgeInsets.all(8.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 4,
                 child: ListTile(
                   title: Text("Point de vente : ${visit['point_name'] ?? 'Inconnu'}"),
                   subtitle: Column(

@@ -60,7 +60,6 @@ class _PlanificationTourneePageState extends State<PlanificationTourneePage> {
           pointId: pointId,
           order: order,
         );
-
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -85,89 +84,6 @@ class _PlanificationTourneePageState extends State<PlanificationTourneePage> {
       }
     });
   }
-/*
-  Future<void> _showProductSelection(int pointId) async {
-    final products = await dbHelper.getProducts(widget.livreurId);
-    if (products.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Aucun produit disponible à associer.')),
-      );
-      return;
-    }
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) {
-        final Map<int, int> pointProducts = Map.from(productQuantities[pointId] ?? {});
-
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            top: 16.0,
-            left: 16.0,
-            right: 16.0,
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Associer des produits au Point de Vente',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                ),
-                SizedBox(height: 10),
-                ...products.map((product) {
-                  final productId = product['id'];
-                  final quantity = pointProducts[productId] ?? 0;
-
-                  return ListTile(
-                    title: Text(product['nom']),
-                    trailing: SizedBox(
-                      width: 100,
-                      child: TextFormField(
-                        initialValue: quantity > 0 ? quantity.toString() : null,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: 'Quantité',
-                          hintText: '0',
-                          border: OutlineInputBorder(),
-                        ),
-                        onChanged: (value) {
-                          final parsedValue = int.tryParse(value) ?? 0;
-                          setState(() {
-                            if (parsedValue > 0) {
-                              pointProducts[productId] = parsedValue;
-                            } else {
-                              pointProducts.remove(productId);
-                            }
-                          });
-                        },
-                      ),
-                    ),
-                  );
-                }).toList(),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      productQuantities[pointId] = pointProducts;
-                    });
-                    Navigator.pop(context);
-                  },
-                  child: Text('Enregistrer'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade300,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }*/
 
   @override
   Widget build(BuildContext context) {
@@ -254,25 +170,8 @@ class _PlanificationTourneePageState extends State<PlanificationTourneePage> {
                             ),
                           ),
                           title: Text(point['name']),
-                          /*subtitle: Text(
-                              'Cliquez pour associer des produits.'),
-                          trailing: IconButton(
-                            icon: Icon(Icons.add),
-                            onPressed: () {
-                              if (selectedPoints.containsKey(pointId)) {
-                                _showProductSelection(pointId);
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text(
-                                          'Sélectionnez d\'abord le point de vente.')),
-                                );
-                              }
-                            },
-                          ),*/
                           onTap: () {
-                            _toggleSelection(
-                                pointId, selectedPoints.length + 1);
+                            _toggleSelection(pointId, selectedPoints.length + 1);
                           },
                         ),
                       );

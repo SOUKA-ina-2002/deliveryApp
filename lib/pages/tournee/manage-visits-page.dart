@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_project/pages/tournee/TourDetailsPage.dart';
-import '../helpers/DataBaseHelper.dart';
+
+import '../../helpers/DataBaseHelper.dart';
 
 class ManageVisitsPage extends StatefulWidget {
   final int livreurId;
@@ -62,19 +63,21 @@ class _ManageVisitsPageState extends State<ManageVisitsPage> {
               final formattedDate = "${date.day}/${date.month}/${date.year}";
 
               return Card(
-                margin: EdgeInsets.all(8.0),
+                margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                elevation: 4,
                 child: ListTile(
                   leading: Icon(Icons.assignment, color: Colors.blue.shade800),
-                  title: Text("${tour['nom']}"),
+                  title: Text(
+                    "${tour['nom']}",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   subtitle: Text("Date: $formattedDate"),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _deleteTour(tour['id']),
-                      ),
-                    ],
+                  trailing: IconButton(
+                    icon: Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => _deleteTour(tour['id']),
                   ),
                   onTap: () {
                     Navigator.push(
@@ -88,7 +91,6 @@ class _ManageVisitsPageState extends State<ManageVisitsPage> {
                       ),
                     );
                   },
-
                 ),
               );
             },

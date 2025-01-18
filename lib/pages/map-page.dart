@@ -8,10 +8,10 @@ import 'Product/ProductsPage.dart';
 import 'SalePoints/SalesPointNotifier.dart';
 import 'SalePoints/points_de_vente_page.dart';
 import 'Auth/auth-page.dart';
-import 'manage-visits-page.dart';
+import 'tournee/manage-visits-page.dart';
 
 class MapPage extends StatefulWidget {
-  final int livreurId; // Ajout du livreurId pour filtrer les points
+  final int livreurId;
   MapPage({Key? key, required this.livreurId}) : super(key: key);
 
   @override
@@ -24,21 +24,21 @@ class _MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
-    _initializeSalesPoints(); // Initialiser les points dans le notifier
+    _initializeSalesPoints();
   }
 
   Future<void> _initializeSalesPoints() async {
     final points = await dbHelper.getSalesPoints(widget.livreurId);
-    Provider.of<SalesPointNotifier>(context, listen: false)
-        .updateSalesPoints(points);
+    Provider.of<SalesPointNotifier>(context, listen: false).updateSalesPoints(points);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Carte"),
-        backgroundColor: Colors.blue.shade300,
+        title: Text("Carte des Points de Vente"),
+        backgroundColor: Colors.blue.shade500,
+        elevation: 0,
       ),
       drawer: Drawer(
         child: ListView(
@@ -46,77 +46,54 @@ class _MapPageState extends State<MapPage> {
           children: [
             DrawerHeader(
               decoration: BoxDecoration(
-                color: Colors.blue.shade300,
+                color: Colors.blue.shade500,
               ),
               child: Text(
-                'Menu',
+                'Menu Principal',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 24,
                 ),
               ),
             ),
-            ListTile(
-              leading: Icon(Icons.location_on),
-              title: Text('Points de Vente'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => PointsDeVentePage(
-                      livreurId: widget.livreurId,
-                    ),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.inventory),
-              title: Text('Mes Produits'), // Nouvelle option
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ProductsPage(livreurId: widget.livreurId), // Naviguer vers la page des produits
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.calendar_today),
-              title: Text('Planification de Tournée'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => PlanificationTourneePage(
-                      livreurId: widget.livreurId,
-                    ),
-                  ),
-                );
-              },
-            ),
-
-            ListTile(
-              leading: Icon(Icons.assignment),
-              title: Text('Gérer les Visites'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => ManageVisitsPage(livreurId: widget.livreurId)),
-                );
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.exit_to_app),
-              title: Text('Déconnexion'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AuthPage()),
-                );
-              },
-            ),
+            _buildDrawerItem(Icons.location_on, 'Points de Vente', () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PointsDeVentePage(livreurId: widget.livreurId),
+                ),
+              );
+            }),
+            _buildDrawerItem(Icons.inventory, 'Mes Produits', () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProductsPage(livreurId: widget.livreurId),
+                ),
+              );
+            }),
+            _buildDrawerItem(Icons.calendar_today, 'Planification de Tournée', () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PlanificationTourneePage(livreurId: widget.livreurId),
+                ),
+              );
+            }),
+            _buildDrawerItem(Icons.assignment, 'Gérer les Visites', () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ManageVisitsPage(livreurId: widget.livreurId),
+                ),
+              );
+            }),
+            _buildDrawerItem(Icons.exit_to_app, 'Déconnexion', () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => AuthPage()),
+              );
+            }),
           ],
         ),
       ),
@@ -150,7 +127,7 @@ class _MapPageState extends State<MapPage> {
                     arguments: coordinates,
                   );
                   if (result == true) {
-                    _initializeSalesPoints(); // Recharger les points
+                    _initializeSalesPoints();
                   }
                 }
               },
@@ -160,9 +137,7 @@ class _MapPageState extends State<MapPage> {
                 urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                 subdomains: ['a', 'b', 'c'],
               ),
-              MarkerLayer(
-                markers: markers,
-              ),
+              MarkerLayer(markers: markers),
             ],
           );
         },
@@ -174,8 +149,16 @@ class _MapPageState extends State<MapPage> {
           );
         },
         child: Icon(Icons.add),
-        backgroundColor: Colors.blue.shade300,
+        backgroundColor: Colors.blue.shade500,
       ),
+    );
+  }
+
+  Widget _buildDrawerItem(IconData icon, String title, Function() onTap) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.blue.shade500),
+      title: Text(title, style: TextStyle(color: Colors.blue.shade500)),
+      onTap: onTap,
     );
   }
 }

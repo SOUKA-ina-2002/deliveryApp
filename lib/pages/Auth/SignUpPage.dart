@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../helpers/AuthService.dart';
 import '../../helpers/DataBaseHelper.dart';
 
-
 class SignUpPage extends StatefulWidget {
   @override
   _SignUpPageState createState() => _SignUpPageState();
@@ -33,7 +32,7 @@ class _SignUpPageState extends State<SignUpPage> {
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(20.0),
           child: Center(
             child: SingleChildScrollView(
               child: Form(
@@ -58,182 +57,46 @@ class _SignUpPageState extends State<SignUpPage> {
                       "Créer un compte",
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 28,
+                        fontSize: 32,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
                     ),
                     SizedBox(height: 40),
                     // Nom field
-                    TextFormField(
-                      controller: _nomController,
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Colors.white,
-                        prefixIcon: Icon(Icons.person),
-                        labelText: "Nom",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value!.isEmpty) {
-                          return 'Veuillez entrer votre nom';
-                        }
-                        return null;
-                      },
-                    ),
+                    _buildTextField(_nomController, "Nom", Icons.person),
                     SizedBox(height: 20),
                     // Prénom field
-                    TextFormField(
-                      controller: _prenomController,
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Colors.white,
-                        prefixIcon: Icon(Icons.person),
-                        labelText: "Prénom",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value!.isEmpty) {
-                          return 'Veuillez entrer votre prénom';
-                        }
-                        return null;
-                      },
-                    ),
+                    _buildTextField(_prenomController, "Prénom", Icons.person),
                     SizedBox(height: 20),
                     // Téléphone field
-                    TextFormField(
-                      controller: _telController,
-                      keyboardType: TextInputType.phone,
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Colors.white,
-                        prefixIcon: Icon(Icons.phone),
-                        labelText: "Téléphone",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value!.isEmpty) {
-                          return 'Veuillez entrer votre numéro de téléphone';
-                        }
-                        return null;
-                      },
-                    ),
+                    _buildTextField(_telController, "Téléphone", Icons.phone, keyboardType: TextInputType.phone),
                     SizedBox(height: 20),
                     // Email field
-                    TextFormField(
-                      controller: _emailController,
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Colors.white,
-                        prefixIcon: Icon(Icons.email),
-                        labelText: "Email",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value!.isEmpty) {
-                          return 'Veuillez entrer votre adresse email';
-                        }
-                        return null;
-                      },
-                    ),
+                    _buildTextField(_emailController, "Email", Icons.email),
                     SizedBox(height: 20),
                     // Password field
-                    TextFormField(
-                      controller: _passController,
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Colors.white,
-                        prefixIcon: Icon(Icons.lock),
-                        labelText: "Mot de passe",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value!.isEmpty) {
-                          return 'Veuillez entrer votre mot de passe';
-                        }
-                        return null;
-                      },
-                    ),
+                    _buildTextField(_passController, "Mot de passe", Icons.lock, obscureText: true),
                     SizedBox(height: 20),
                     // Confirm Password field
-                    TextFormField(
-                      controller: _confirmpassController,
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Colors.white,
-                        prefixIcon: Icon(Icons.lock),
-                        labelText: "Confirmez le mot de passe",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value!.isEmpty) {
-                          return 'Veuillez confirmer votre mot de passe';
-                        } else if (value != _passController.text) {
-                          return 'Les mots de passe ne correspondent pas';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 20),
+                    _buildTextField(_confirmpassController, "Confirmez le mot de passe", Icons.lock, obscureText: true),
+                    SizedBox(height: 30),
                     // Sign Up button
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: Colors.blue.shade800,
-                        padding: EdgeInsets.symmetric(vertical: 15),
+                        padding: EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(16),
                         ),
+                        elevation: 5,
                       ),
-                        onPressed: () async {
-                          if (_formKey.currentState!.validate()) {
-                            _formKey.currentState?.save();
-
-                            // Sign up user with Firebase
-                            User? usr = await _auth.signUpWithEmailandPass(
-                              _emailController.text,
-                              _passController.text,
-                            );
-
-                            if (usr != null) {
-                              // Ajouter ou vérifier l'utilisateur dans SQLite
-                              String result = await _dbHelper.insertOrUpdateLivreur(
-                                nom: _nomController.text,
-                                prenom: _prenomController.text,
-                                tel: _telController.text,
-                                firebaseUserId: usr.uid,
-                                mail: _emailController.text,
-                              );
-
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(result),
-                                  backgroundColor: result.contains("succès") ? Colors.green : Colors.red,
-                                ),
-                              );
-
-                              // Si l'inscription est réussie, rediriger vers la page de connexion
-                              if (result == "Compte créé avec succès.") {
-                                Navigator.pushReplacementNamed(context, '/login');
-                              }
-                            }
-                          }
-                        },
-                        child: Text("S'inscrire"),
+                      onPressed: _signUp,
+                      child: Text(
+                        "S'inscrire",
+                        style: TextStyle(fontSize: 18),
+                      ),
                     ),
                     SizedBox(height: 20),
                     // Already have an account
@@ -263,6 +126,71 @@ class _SignUpPageState extends State<SignUpPage> {
         ),
       ),
     );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String label, IconData icon, {bool obscureText = false, TextInputType? keyboardType}) {
+    return TextFormField(
+      controller: controller,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: Colors.white,
+        prefixIcon: Icon(icon),
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.blue.shade800),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.blue.shade800, width: 2),
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+      validator: (value) {
+        if (value!.isEmpty) {
+          return 'Veuillez entrer votre $label';
+        } else if (label == "Confirmez le mot de passe" && value != _passController.text) {
+          return 'Les mots de passe ne correspondent pas';
+        }
+        return null;
+      },
+    );
+  }
+
+  Future<void> _signUp() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState?.save();
+
+      // Sign up user with Firebase
+      User? usr = await _auth.signUpWithEmailandPass(
+        _emailController.text,
+        _passController.text,
+      );
+
+      if (usr != null) {
+        // Ajouter ou vérifier l'utilisateur dans SQLite
+        String result = await _dbHelper.insertOrUpdateLivreur(
+          nom: _nomController.text,
+          prenom: _prenomController.text,
+          tel: _telController.text,
+          firebaseUserId: usr.uid,
+          mail: _emailController.text,
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result),
+            backgroundColor: result.contains("succès") ? Colors.green : Colors.red,
+          ),
+        );
+
+        // Si l'inscription est réussie, rediriger vers la page de connexion
+        if (result == "Compte créé avec succès.") {
+          Navigator.pushReplacementNamed(context, '/login');
+        }
+      }
+    }
   }
 
   @override
