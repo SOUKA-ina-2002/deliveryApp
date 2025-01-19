@@ -114,15 +114,26 @@ Below is the class diagram that represents the structure and relationships of th
 
 ---
 
-## Use Case Diagram
-
-The use case diagram illustrating the functionality of the application is available [here](images/UseCaseDiagram.png).
-
----
 
 ## Installation and Setup
-
 1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/SOUKA-ina-2002/deliveryApp.git
-   cd DeliveryApp
+```bash
+git clone https://github.com/SOUKA-ina-2002/deliveryApp.git
+cd DeliveryApp
+```
+
+2. **Install Dependencies**:
+Ensure you have Flutter installed. Then run:
+```bash
+flutter pub get
+ ```
+
+3. **Run the Application**:
+ ```bash
+flutter run
+ ```
+
+4. **Database Setup**:
+SQLite is used for local storage. The database schema is auto-generated on first launch.
+
+---

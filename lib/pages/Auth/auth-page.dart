@@ -45,7 +45,7 @@ class _AuthPageState extends State<AuthPage> {
                   ),
                   SizedBox(height: 20),
                   Text(
-                    "Trajecto",
+                    "Mon Trajet",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 32,
@@ -99,7 +99,7 @@ class _AuthPageState extends State<AuthPage> {
                             MaterialPageRoute(builder: (context) => SignUpPage()),
                           );
                         },
-                        child: Text(
+                       child: Text(
                           'Créer un compte',
                           style: TextStyle(color: Colors.white),
                         ),
